@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="bitunix-client",
+    name="bitunix",
     version="0.1.0",
-    author="0xCherryBlueZu",
+    author="0xCherryBlue",
     author_email="0xCherryBlue@proton.me",
     description="An open source, unofficial Python client for the BitUnix cryptocurrency exchange API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/0xCherryBlueZu/bitunix-client",
+    url="https://github.com/0xCherryBlueZu/bitunix",
     packages=find_packages(exclude=["tests"]),
     classifiers=[
         "Development Status :: 3 - Alpha",

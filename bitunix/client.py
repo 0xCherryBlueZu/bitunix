@@ -7,7 +7,7 @@ from typing import Dict, Any, List
 from urllib.parse import urlencode
 import secrets
 
-class BitUnixClient:
+class BitunixClient:
     """
     A client for interacting with the BitUnix cryptocurrency exchange API.
 

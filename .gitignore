@@ -30,4 +30,4 @@ wheels/
 # Environment
 .env
 venv/
-
+notes.txt
