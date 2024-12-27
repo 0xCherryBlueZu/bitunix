@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="bitunix",
-    version="0.1.0",
+    version="0.1.1",
     author="0xCherryBlue",
     author_email="0xCherryBlue@proton.me",
     description="An open source, unofficial Python client for the BitUnix cryptocurrency exchange API",

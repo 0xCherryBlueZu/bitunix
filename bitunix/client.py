@@ -63,7 +63,7 @@ class BitunixClient:
 
     def sign_request(self, nonce: str, timestamp: str, 
                      query_params: Dict[str, Any] = None, 
-                     body: Dict[str, Any] = None) -> str:
+                     body: str = None) -> str:
         """
         Generate a signature for BitUnix API requests.
 
@@ -74,8 +74,8 @@ class BitunixClient:
         :return: The generated signature
         """
         query_string = urlencode(sorted(query_params.items())) if query_params else ""
-        body_string = json.dumps(body, separators=(',', ':')) if body else ""
-        message = f"{nonce}{timestamp}{self.api_key}{query_string}{body_string}"
+        body = body if body else ""
+        message = f"{nonce}{timestamp}{self.api_key}{query_string}{body}"
 
         # First SHA256 encryption
         digest = hashlib.sha256(message.encode()).hexdigest()
@@ -108,12 +108,12 @@ class BitunixClient:
         params = {"symbol": symbol}
         return self._get(endpoint, params)
 
-    def get_depth_data(self, symbol: str, precision: int) -> Dict[str, Any]:
+    def get_depth_data(self, symbol: str, precision: float) -> Dict[str, Any]:
         """
         Get depth data for a trading pair.
 
         :param symbol: Trading pair symbol
-        :param precision: Token precision
+        :param precision: Token decimal precision (0.01, 0.1, 1, 10, 100, etc.)
         :return: Depth data
         """
         endpoint = "/api/spot/v1/market/depth"
@@ -177,7 +177,7 @@ class BitunixClient:
         }
         
         query_string = urlencode(sorted(params.items())) if params else ""
-        signature = self.sign_request(nonce, timestamp, query_params=params)
+        signature = self.sign_request(nonce, timestamp, query_params=query_string)
         headers["sign"] = signature  
 
         response = self.session.get(f"{self.BASE_URL}{endpoint}", params=params, headers=headers)
@@ -214,29 +214,42 @@ class BitunixClient:
         nonce = self._generate_nonce()
         
         headers = {
-            "X-BX-APIKEY": self.api_key,
-            "X-BX-TIMESTAMP": timestamp,
-            "X-BX-NONCE": nonce,
+            "api-key": self.api_key,
+            "timestamp": timestamp,
+            "nonce": nonce,
+            "Content-Type": "application/json"
         }
         
-        signature = self.sign_request(nonce, timestamp, body=data)
-        headers["X-BX-SIGN"] = signature
+        # Convert data to JSON string alphabetically
+        body_string = json.dumps(data, separators=(',', ':'), sort_keys=True)
+        
+        # Generate signature
+        signature = self.sign_request(nonce, timestamp, body=body_string)
+        headers["sign"] = signature
 
-        response = self.session.post(f"{self.BASE_URL}{endpoint}", json=data, headers=headers)
+        print(body_string)  
+        print(headers)
+
+        response = self.session.post(f"{self.BASE_URL}{endpoint}", data=body_string, headers=headers)
+        print(response.json())  
         response.raise_for_status()
         return response.json()
 
-    def place_order(self, side: int, order_type: int, volume: str, price: str, symbol: str) -> Dict[str, Any]:
+    def place_order(self, side: int, order_type: int, volume: str, symbol: str, price: str = None) -> Dict[str, Any]:
         """
         Place an order.
 
-        :param side: Side (1 Sell, 2 Buy)
-        :param order_type: Order Type (1: Limit, 2: Market)
-        :param volume: Amount
-        :param price: Price
-        :param symbol: Trading pair
+        :param side: Side (1 Sell, 2 Buy) as int
+        :param order_type: Order Type (1: Limit, 2: Market) as int
+        :param volume: Amount as str
+        :param symbol: Trading pair as str
+        :param price: Price as str
         :return: Order details
         """
+
+        if order_type == 2:
+            price = "0"
+
         endpoint = "/api/spot/v1/order/place_order"
         data = {
             "side": side,
@@ -325,4 +338,3 @@ class BitunixClient:
         endpoint = "/api/spot/v1/order/pending/list"
         data = {"symbol": symbol}
         return self._post_authenticated(endpoint, data)
-
